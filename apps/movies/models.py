@@ -9,6 +9,7 @@ class Movie(models.Model):
     genre = models.CharField(max_length=100)
     director = models.CharField(max_length=255)
     rating = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

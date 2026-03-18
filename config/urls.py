@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import TokenVerifyView
 api_v1_patterns = [
     path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("users/", include("apps.users.urls")),
+    path("movies/", include("apps.movies.urls")),
 ]
 
 urlpatterns = [
