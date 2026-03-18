@@ -3,23 +3,19 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     POETRY_VERSION=2.1.1 \
-    POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_CREATE=false
 
-ENV PATH="$POETRY_HOME/bin:$PATH"
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
     libpq-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN pip install --no-cache-dir "poetry==$POETRY_VERSION"
 
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --without dev --no-root
+RUN poetry install --only main --no-root
 
 COPY . .
 
