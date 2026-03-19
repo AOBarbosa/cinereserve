@@ -36,7 +36,9 @@ class TestUserManager:
 
     def test_create_user_requires_username(self):
         with pytest.raises(ValueError, match="Username is required."):
-            User.objects.create_user(email="test@example.com", username="", password="pass")
+            User.objects.create_user(
+                email="test@example.com", username="", password="pass"
+            )
 
     def test_create_superuser(self):
         user = User.objects.create_superuser(
@@ -45,15 +47,19 @@ class TestUserManager:
             password="StrongPass123!",
         )
 
-        assert user.is_staff is True
-        assert user.is_superuser is True
+        assert user.is_staff
+        assert user.is_superuser
 
     def test_email_is_unique(self):
         from django.db import IntegrityError
 
-        User.objects.create_user(email="dup@example.com", username="user1", password="Pass123!")
+        User.objects.create_user(
+            email="dup@example.com", username="user1", password="Pass123!"
+        )
         with pytest.raises(IntegrityError):
-            User.objects.create_user(email="dup@example.com", username="user2", password="Pass123!")
+            User.objects.create_user(
+                email="dup@example.com", username="user2", password="Pass123!"
+            )
 
     def test_username_is_unique(self):
         from django.db import IntegrityError
