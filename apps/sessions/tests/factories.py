@@ -1,7 +1,8 @@
-import factory
 from datetime import timedelta
-from factory.declarations import Sequence, SubFactory
+
+import factory
 from django.utils import timezone
+from factory.declarations import Sequence, SubFactory
 
 from apps.movies.tests.factories import MovieFactory
 from apps.sessions.models import MovieSession, Seat
@@ -18,7 +19,9 @@ class MovieSessionFactory(factory.django.DjangoModelFactory):
     columns = 10
     start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(hours=1))
     end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(hours=3))
-    price = factory.Faker("pydecimal", left_digits=2, right_digits=2, positive=True, max_value=50)
+    price = factory.Faker(
+        "pydecimal", left_digits=2, right_digits=2, positive=True, max_value=50
+    )
     is_active = True
 
 
