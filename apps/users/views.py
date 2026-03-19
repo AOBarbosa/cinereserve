@@ -35,7 +35,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
 class RegisterView(APIView):
     permission_classes = (AllowAny,)
 
-    @extend_schema(request=RegisterSerializer, responses={201: UserSerializer})
+    @extend_schema(request=RegisterSerializer, responses={201: UserSerializer}, tags=["Users"])
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -46,7 +46,7 @@ class RegisterView(APIView):
 class LoginView(APIView):
     permission_classes = (AllowAny,)
 
-    @extend_schema(request=LoginSerializer, responses={200: UserSerializer})
+    @extend_schema(request=LoginSerializer, responses={200: UserSerializer}, tags=["Users"])
     def post(self, request: Request) -> Response:
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -59,7 +59,7 @@ class LoginView(APIView):
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    @extend_schema(request=None, responses={205: None})
+    @extend_schema(request=None, responses={205: None}, tags=["Users"])
     def post(self, request: Request) -> Response:
         refresh_cookie = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
         refresh_token = request.COOKIES.get(refresh_cookie)
@@ -78,7 +78,7 @@ class LogoutView(APIView):
 class CookieTokenRefreshView(APIView):
     permission_classes = (AllowAny,)
 
-    @extend_schema(request=None, responses={200: None})
+    @extend_schema(request=None, responses={200: None}, tags=["Users"])
     def post(self, request: Request) -> Response:
         refresh_cookie = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
         refresh_token = request.COOKIES.get(refresh_cookie)

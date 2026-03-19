@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
@@ -11,6 +11,10 @@ def _is_admin(request: Request) -> bool:
     return request.user and request.user.is_authenticated and request.user.is_staff
 
 
+@extend_schema_view(
+    get=extend_schema(summary="List all movies", tags=["Movies"]),
+    post=extend_schema(summary="Create a movie (admin only)", tags=["Movies"]),
+)
 class MovieListView(ListCreateAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
@@ -25,15 +29,22 @@ class MovieListView(ListCreateAPIView):
             return [IsAuthenticated(), IsAdminUser()]
         return [AllowAny()]
 
-    @extend_schema(summary="List all movies")
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @extend_schema(summary="Create a movie (admin only)")
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
 
+@extend_schema_view(
+    get=extend_schema(summary="Retrieve a movie", tags=["Movies"]),
+    put=extend_schema(summary="Update a movie (admin only)", tags=["Movies"]),
+    patch=extend_schema(
+        summary="Partially update a movie or soft delete via is_active=False (admin only)",
+        tags=["Movies"],
+    ),
+    delete=extend_schema(summary="Permanently delete a movie (admin only)", tags=["Movies"]),
+)
 class MovieDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
@@ -48,20 +59,14 @@ class MovieDetailView(RetrieveUpdateDestroyAPIView):
             return [AllowAny()]
         return [IsAuthenticated(), IsAdminUser()]
 
-    @extend_schema(summary="Retrieve a movie")
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @extend_schema(summary="Update a movie (admin only)")
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @extend_schema(
-        summary="Partially update a movie or soft delete via is_active=False (admin only)"
-    )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
-    @extend_schema(summary="Permanently delete a movie (admin only)")
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
