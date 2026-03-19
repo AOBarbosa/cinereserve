@@ -25,7 +25,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
 ]
 
-LOCAL_APPS = ["apps.users", "apps.movies"]
+LOCAL_APPS = ["apps.users", "apps.movies", "apps.sessions"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
