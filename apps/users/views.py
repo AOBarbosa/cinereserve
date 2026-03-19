@@ -1,7 +1,8 @@
 from django.conf import settings
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,10 +10,13 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.users.models import User
 from apps.users.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 
 
-def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+def _set_auth_cookies(
+    response: Response, access_token: str, refresh_token: str
+) -> None:
     jwt_settings = settings.SIMPLE_JWT
     response.set_cookie(
         key=jwt_settings["AUTH_COOKIE_ACCESS"],
@@ -32,10 +36,21 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     )
 
 
+@extend_schema_view(
+    get=extend_schema(summary="List all users", tags=["Users"]),
+)
+class ListUsersView(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAdminUser,)
+    queryset = User.objects.all()
+
+
 class RegisterView(APIView):
     permission_classes = (AllowAny,)
 
-    @extend_schema(request=RegisterSerializer, responses={201: UserSerializer}, tags=["Users"])
+    @extend_schema(
+        request=RegisterSerializer, responses={201: UserSerializer}, tags=["Users"]
+    )
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -46,12 +61,16 @@ class RegisterView(APIView):
 class LoginView(APIView):
     permission_classes = (AllowAny,)
 
-    @extend_schema(request=LoginSerializer, responses={200: UserSerializer}, tags=["Users"])
+    @extend_schema(
+        request=LoginSerializer, responses={200: UserSerializer}, tags=["Users"]
+    )
     def post(self, request: Request) -> Response:
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        response = Response(UserSerializer(data["user"]).data, status=status.HTTP_200_OK)
+        response = Response(
+            UserSerializer(data["user"]).data, status=status.HTTP_200_OK
+        )
         _set_auth_cookies(response, data["access"], data["refresh"])
         return response
 
@@ -64,11 +83,17 @@ class LogoutView(APIView):
         refresh_cookie = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
         refresh_token = request.COOKIES.get(refresh_cookie)
         if not refresh_token:
-            return Response({"detail": "Refresh token not found."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Refresh token not found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             RefreshToken(refresh_token).blacklist()
         except TokenError:
-            return Response({"detail": "Token is invalid or already blacklisted."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Token is invalid or already blacklisted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         response = Response(status=status.HTTP_205_RESET_CONTENT)
         response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_ACCESS"])
         response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
@@ -83,7 +108,10 @@ class CookieTokenRefreshView(APIView):
         refresh_cookie = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
         refresh_token = request.COOKIES.get(refresh_cookie)
         if not refresh_token:
-            return Response({"detail": "Refresh token not found."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Refresh token not found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = TokenRefreshSerializer(data={"refresh": refresh_token})
         try:
             serializer.is_valid(raise_exception=True)
