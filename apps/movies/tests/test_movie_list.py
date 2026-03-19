@@ -141,7 +141,9 @@ class TestMovieList:
 
         assert response.data["count"] == 1
 
-    def test_inactive_movies_hidden_from_regular_users(self, auth_client, movie_list_url):
+    def test_inactive_movies_hidden_from_regular_users(
+        self, auth_client, movie_list_url
+    ):
         MovieFactory(is_active=True)
         MovieFactory(is_active=False)
 
@@ -154,7 +156,11 @@ class TestMovieList:
         user = UserFactory(is_staff=True)
         user.set_password(PASSWORD)
         user.save()
-        admin.post(reverse("user-login"), {"email": user.email, "password": PASSWORD}, format="json")
+        admin.post(
+            reverse("user-login"),
+            {"email": user.email, "password": PASSWORD},
+            format="json",
+        )
         MovieFactory(is_active=True)
         MovieFactory(is_active=False)
 

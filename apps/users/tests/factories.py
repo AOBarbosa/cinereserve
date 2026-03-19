@@ -1,5 +1,6 @@
 import factory
-from factory.declarations import Sequence, PostGenerationMethodCall
+from factory.declarations import PostGenerationMethodCall, Sequence
+
 from apps.users.models import User
 
 
