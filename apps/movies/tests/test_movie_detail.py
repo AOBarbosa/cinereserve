@@ -116,51 +116,83 @@ class TestMovieUpdate:
 
 @pytest.mark.django_db
 class TestMovieSoftDelete:
-    def test_admin_can_delete_movie(self, admin_client, movie):
-        response = admin_client.delete(detail_url(movie.pk))
+    def test_admin_can_soft_delete_movie(self, admin_client, movie):
+        response = admin_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response.status_code == status.HTTP_200_OK
 
-    def test_delete_sets_is_active_false(self, admin_client, movie):
-        admin_client.delete(detail_url(movie.pk))
+    def test_soft_delete_sets_is_active_false(self, admin_client, movie):
+        admin_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
         movie.refresh_from_db()
         assert movie.is_active is False
 
-    def test_deleted_movie_still_exists_in_db(self, admin_client, movie):
-        admin_client.delete(detail_url(movie.pk))
+    def test_soft_deleted_movie_still_exists_in_db(self, admin_client, movie):
+        admin_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
         assert Movie.objects.filter(pk=movie.pk).exists()
 
-    def test_deleted_movie_hidden_from_regular_users(self, admin_client, regular_client, movie):
-        admin_client.delete(detail_url(movie.pk))
+    def test_soft_deleted_movie_hidden_from_regular_users(self, admin_client, regular_client, movie):
+        admin_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
         response = regular_client.get(reverse("movie-list"))
         ids = [m["id"] for m in response.data["results"]]
         assert movie.pk not in ids
 
-    def test_deleted_movie_hidden_from_unauthenticated_users(self, admin_client, client, movie):
-        admin_client.delete(detail_url(movie.pk))
+    def test_soft_deleted_movie_hidden_from_unauthenticated_users(self, admin_client, client, movie):
+        admin_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
         response = client.get(reverse("movie-list"))
         ids = [m["id"] for m in response.data["results"]]
         assert movie.pk not in ids
 
-    def test_deleted_movie_still_visible_to_admin(self, admin_client, movie):
-        admin_client.delete(detail_url(movie.pk))
+    def test_soft_deleted_movie_still_visible_to_admin(self, admin_client, movie):
+        admin_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
         response = admin_client.get(reverse("movie-list"))
         ids = [m["id"] for m in response.data["results"]]
         assert movie.pk in ids
 
-    def test_regular_user_cannot_delete_movie(self, regular_client, movie):
-        response = regular_client.delete(detail_url(movie.pk))
+    def test_regular_user_cannot_soft_delete_movie(self, regular_client, movie):
+        response = regular_client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         movie.refresh_from_db()
         assert movie.is_active is True
 
-    def test_unauthenticated_user_cannot_delete_movie(self, client, movie):
+    def test_unauthenticated_user_cannot_soft_delete_movie(self, client, movie):
+        response = client.patch(detail_url(movie.pk), {"is_active": False}, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestMovieHardDelete:
+    def test_admin_can_hard_delete_movie(self, admin_client, movie):
+        response = admin_client.delete(detail_url(movie.pk))
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_hard_delete_removes_movie_from_db(self, admin_client, movie):
+        pk = movie.pk
+        admin_client.delete(detail_url(pk))
+
+        assert not Movie.objects.filter(pk=pk).exists()
+
+    def test_hard_deleted_movie_returns_404(self, admin_client, movie):
+        pk = movie.pk
+        admin_client.delete(detail_url(pk))
+
+        response = admin_client.get(detail_url(pk))
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_regular_user_cannot_hard_delete_movie(self, regular_client, movie):
+        response = regular_client.delete(detail_url(movie.pk))
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert Movie.objects.filter(pk=movie.pk).exists()
+
+    def test_unauthenticated_user_cannot_hard_delete_movie(self, client, movie):
         response = client.delete(detail_url(movie.pk))
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

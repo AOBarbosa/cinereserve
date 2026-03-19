@@ -88,6 +88,7 @@ class TestMovieList:
         assert "genre" in movie
         assert "director" in movie
         assert "rating" in movie
+        assert "is_active" in movie
 
     def test_password_not_exposed(self, client, movie_list_url):
         MovieFactory()

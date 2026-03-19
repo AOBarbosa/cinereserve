@@ -2,7 +2,6 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.response import Response
 
 from apps.movies.models import Movie
 from apps.movies.serializers import MovieSerializer
@@ -14,6 +13,7 @@ def _is_admin(request: Request) -> bool:
 
 class MovieListView(ListCreateAPIView):
     serializer_class = MovieSerializer
+    queryset = Movie.objects.all()
 
     def get_queryset(self):
         if _is_admin(self.request):
@@ -36,6 +36,7 @@ class MovieListView(ListCreateAPIView):
 
 class MovieDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = MovieSerializer
+    queryset = Movie.objects.all()
 
     def get_queryset(self):
         if _is_admin(self.request):
@@ -55,19 +56,12 @@ class MovieDetailView(RetrieveUpdateDestroyAPIView):
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @extend_schema(summary="Partially update a movie (admin only)")
+    @extend_schema(
+        summary="Partially update a movie or soft delete via is_active=False (admin only)"
+    )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
-    @extend_schema(summary="Soft delete a movie (admin only)")
+    @extend_schema(summary="Permanently delete a movie (admin only)")
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
-
-    def perform_destroy(self, instance: Movie) -> None:
-        instance.is_active = False
-        instance.save()
-
-    def destroy(self, request, *args, **kwargs) -> Response:
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=204)

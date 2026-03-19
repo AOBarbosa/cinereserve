@@ -69,6 +69,7 @@ class TestMovieCreate:
         assert response.data["title"] == valid_payload["title"]
         assert response.data["director"] == valid_payload["director"]
         assert "id" in response.data
+        assert response.data["is_active"] is True
 
     def test_regular_user_cannot_create_movie(self, regular_client, movie_list_url, valid_payload):
         response = regular_client.post(movie_list_url, valid_payload, format="json")

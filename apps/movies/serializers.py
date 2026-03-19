@@ -15,4 +15,5 @@ class MovieSerializer(serializers.ModelSerializer):
             "genre",
             "director",
             "rating",
+            "is_active",
         )
