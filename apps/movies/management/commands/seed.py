@@ -1,9 +1,8 @@
+import string
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-
-import string
 
 from apps.movies.models import Movie
 from apps.sessions.models import MovieSession, Reservation, Seat
@@ -85,12 +84,12 @@ class Command(BaseCommand):
         sessions_data = [
             # Past sessions (for purchase history)
             {"room": "Room E", "offset_hours": -48, "rows": 10, "columns": 15},
-            {"room": "Room F", "offset_hours": -24, "rows": 8,  "columns": 12},
+            {"room": "Room F", "offset_hours": -24, "rows": 8, "columns": 12},
             # Future sessions (upcoming)
-            {"room": "Room A", "offset_hours": 2,   "rows": 10, "columns": 15},
-            {"room": "Room B", "offset_hours": 5,   "rows": 8,  "columns": 12},
-            {"room": "Room C", "offset_hours": 24,  "rows": 12, "columns": 20},
-            {"room": "Room D", "offset_hours": 27,  "rows": 6,  "columns": 10},
+            {"room": "Room A", "offset_hours": 2, "rows": 10, "columns": 15},
+            {"room": "Room B", "offset_hours": 5, "rows": 8, "columns": 12},
+            {"room": "Room C", "offset_hours": 24, "rows": 12, "columns": 20},
+            {"room": "Room D", "offset_hours": 27, "rows": 6, "columns": 10},
         ]
 
         all_sessions = []
@@ -137,7 +136,7 @@ class Command(BaseCommand):
         # Index 2 → The Dark Knight / Room A (future, +2h)
         # Index 3 → The Dark Knight / Room B (future, +5h)
 
-        past_session = sessions[0]    # Room E, past
+        past_session = sessions[0]  # Room E, past
         future_session_a = sessions[2]  # Room A, future
         future_session_b = sessions[3]  # Room B, future
 
@@ -153,14 +152,17 @@ class Command(BaseCommand):
                 is_confirmed=True,
             )
             self.stdout.write(
-                f"  Created confirmed ticket (past): {past_session.movie.title} @ {past_session.room} — seat {past_seat.row}{past_seat.column}"
+                f"  Created confirmed ticket (past): {past_session.movie.title} @ {past_session.room} — seat {past_seat.row}{past_seat.column}"  # noqa: E501
             )
         else:
             self.stdout.write("  Skipped past ticket (already exists)")
 
         # 2. Confirmed ticket in a future session (upcoming)
         future_seat_a = future_session_a.seats.order_by("row", "column").first()
-        if future_seat_a and not Reservation.objects.filter(seat=future_seat_a).exists():
+        if (
+            future_seat_a
+            and not Reservation.objects.filter(seat=future_seat_a).exists()
+        ):
             future_seat_a.status = Seat.Status.PURCHASED
             future_seat_a.save()
             Reservation.objects.create(
@@ -170,14 +172,17 @@ class Command(BaseCommand):
                 is_confirmed=True,
             )
             self.stdout.write(
-                f"  Created confirmed ticket (upcoming): {future_session_a.movie.title} @ {future_session_a.room} — seat {future_seat_a.row}{future_seat_a.column}"
+                f"  Created confirmed ticket (upcoming): {future_session_a.movie.title} @ {future_session_a.room} — seat {future_seat_a.row}{future_seat_a.column}"  # noqa: E501
             )
         else:
             self.stdout.write("  Skipped upcoming ticket (already exists)")
 
         # 3. Pending reservation in a future session (RESERVED, awaiting confirm/)
         future_seat_b = future_session_b.seats.order_by("row", "column").first()
-        if future_seat_b and not Reservation.objects.filter(seat=future_seat_b).exists():
+        if (
+            future_seat_b
+            and not Reservation.objects.filter(seat=future_seat_b).exists()
+        ):
             future_seat_b.status = Seat.Status.RESERVED
             future_seat_b.save()
             Reservation.objects.create(
@@ -187,7 +192,7 @@ class Command(BaseCommand):
                 is_confirmed=False,
             )
             self.stdout.write(
-                f"  Created pending reservation: {future_session_b.movie.title} @ {future_session_b.room} — seat {future_seat_b.row}{future_seat_b.column}"
+                f"  Created pending reservation: {future_session_b.movie.title} @ {future_session_b.room} — seat {future_seat_b.row}{future_seat_b.column}"  # noqa: E501
             )
         else:
             self.stdout.write("  Skipped pending reservation (already exists)")
@@ -200,8 +205,8 @@ class Command(BaseCommand):
             ("A", 3, Seat.Status.PURCHASED, True),
             ("B", 1, Seat.Status.PURCHASED, True),
             ("B", 2, Seat.Status.PURCHASED, True),
-            ("C", 1, Seat.Status.RESERVED,  False),
-            ("C", 2, Seat.Status.RESERVED,  False),
+            ("C", 1, Seat.Status.RESERVED, False),
+            ("C", 2, Seat.Status.RESERVED, False),
         ]
         for row, col, seat_status, is_confirmed in occupied:
             seat = future_session_a.seats.filter(row=row, column=col).first()
@@ -218,4 +223,6 @@ class Command(BaseCommand):
                     f"  Occupied seat {row}{col} ({seat_status}) in {future_session_a.room}"
                 )
             else:
-                self.stdout.write(f"  Skipped seat {row}{col} in {future_session_a.room} (already exists)")
+                self.stdout.write(
+                    f"  Skipped seat {row}{col} in {future_session_a.room} (already exists)"
+                )

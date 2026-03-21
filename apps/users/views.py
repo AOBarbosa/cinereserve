@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db.models import QuerySet
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
@@ -58,10 +57,14 @@ class MyTicketsView(ListAPIView):
     queryset = Reservation.objects.none()
 
     def get_queryset(self):  # type: ignore[override]
-        qs = Reservation.objects.filter(
-            user=self.request.user,
-            is_confirmed=True,
-        ).select_related("seat__session__movie").order_by("-seat__session__start_time")
+        qs = (
+            Reservation.objects.filter(
+                user=self.request.user,
+                is_confirmed=True,
+            )
+            .select_related("seat__session__movie")
+            .order_by("-seat__session__start_time")
+        )
 
         upcoming = self.request.query_params.get("upcoming")
         if upcoming == "true":

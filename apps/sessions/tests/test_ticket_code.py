@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from apps.sessions.models import Reservation, Seat
+from apps.sessions.models import Reservation
 from apps.sessions.tests.factories import MovieSessionFactory
 from apps.users.tests.factories import UserFactory
 
@@ -107,4 +107,6 @@ class TestTicketCode:
             confirm_url(session.movie_id, session.id, seat.id)
         )
 
-        assert reserve_response.data["ticket_code"] == confirm_response.data["ticket_code"]
+        assert (
+            reserve_response.data["ticket_code"] == confirm_response.data["ticket_code"]
+        )
