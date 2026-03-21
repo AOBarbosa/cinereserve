@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.db.models import QuerySet
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -10,6 +12,8 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.sessions.models import Reservation
+from apps.sessions.serializers import TicketSerializer
 from apps.users.models import User
 from apps.users.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 
@@ -43,6 +47,29 @@ class ListUsersView(ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAdminUser,)
     queryset = User.objects.all()
+
+
+@extend_schema_view(
+    get=extend_schema(summary="List my tickets", tags=["Tickets"]),
+)
+class MyTicketsView(ListAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Reservation.objects.none()
+
+    def get_queryset(self):  # type: ignore[override]
+        qs = Reservation.objects.filter(
+            user=self.request.user,
+            is_confirmed=True,
+        ).select_related("seat__session__movie").order_by("-seat__session__start_time")
+
+        upcoming = self.request.query_params.get("upcoming")
+        if upcoming == "true":
+            qs = qs.filter(seat__session__start_time__gt=timezone.now())
+        elif upcoming == "false":
+            qs = qs.filter(seat__session__start_time__lte=timezone.now())
+
+        return qs
 
 
 class RegisterView(APIView):

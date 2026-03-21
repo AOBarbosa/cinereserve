@@ -1,4 +1,5 @@
 import string
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -60,6 +61,7 @@ class Reservation(models.Model):
     seat = models.OneToOneField(
         Seat, on_delete=models.CASCADE, related_name="reservation"
     )
+    ticket_code = models.UUIDField(default=uuid.uuid4, unique=True)
     expires_at = models.DateTimeField()
     is_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
