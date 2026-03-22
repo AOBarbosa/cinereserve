@@ -119,6 +119,26 @@ Base URL: `/api/v1/`
 
 ---
 
+## Live Demo
+
+The API is deployed and live at:
+
+**`https://cinereserve-api-e598.onrender.com`**
+
+| Interface | URL |
+|---|---|
+| Swagger UI | `https://cinereserve-api-e598.onrender.com/api/docs/` |
+| ReDoc | `https://cinereserve-api-e598.onrender.com/api/redoc/` |
+
+> The free tier hibernates after 15 min of inactivity — the first request may take ~30s to wake up.
+
+**Example:**
+```bash
+curl https://cinereserve-api-e598.onrender.com/api/v1/movies/
+```
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -267,13 +287,63 @@ poetry run pytest apps/users/tests/test_auth.py::TestLogout::test_logout_success
 
 ## API Documentation
 
-Interactive documentation is available after starting the server:
+### Local
 
 | Interface | URL |
 |---|---|
 | Swagger UI | `http://localhost:8000/api/docs/` |
 | ReDoc | `http://localhost:8000/api/redoc/` |
 | OpenAPI Schema | `http://localhost:8000/api/schema/` |
+
+### Production
+
+| Interface | URL |
+|---|---|
+| Swagger UI | `https://cinereserve-api-e598.onrender.com/api/docs/` |
+| ReDoc | `https://cinereserve-api-e598.onrender.com/api/redoc/` |
+
+---
+
+## Business Rules
+
+### Access Control
+
+- **Public** — movie listing, movie detail, session listing, seat map
+- **Authenticated** — reserve seat, confirm seat, list own tickets, logout
+- **Admin only** — create/update/delete movies, list all users
+- Admin access is granted via `is_staff=True` on the user model
+
+### Movies
+
+- Non-admin users only see active movies (`is_active=True`)
+- Admins see all movies including inactive ones
+- **Soft delete** — `PATCH {"is_active": false}` hides the movie from regular users without removing it from the database
+- **Hard delete** — `DELETE` permanently removes the movie from the database
+
+### Sessions & Seats
+
+- Sessions are only listed if `is_active=True`
+- Seats are auto-generated when a session is created (`rows × columns`, labeled A1…Z26)
+- Each seat has one of three statuses: `AVAILABLE`, `RESERVED`, `PURCHASED`
+
+### Reservation Flow
+
+1. `POST .../seats/<id>/reserve/` — seat must be `AVAILABLE`; a Redis distributed lock is acquired and the seat is set to `RESERVED` with a **10-minute TTL**
+2. `POST .../seats/<id>/confirm/` — reservation must not be expired; seat is set to `PURCHASED` and a ticket is issued
+3. If the reservation expires before confirmation, the seat is reverted to `AVAILABLE` on the next seat map request (lazy expiry)
+
+### Reservation Rules
+
+- Only one active reservation per seat is allowed at the database level (`OneToOneField`)
+- A Redis lock (`cache.add` — atomic SET NX) prevents double-booking under concurrent requests
+- After the lock is acquired, the seat status is re-read from the database to handle race conditions
+- Expired reservations are cleaned up lazily on `GET .../seats/` — no background task required
+
+### Tickets
+
+- A ticket is issued only after the reservation is confirmed (`is_confirmed=True`)
+- Each ticket has a unique `ticket_code` (UUID) generated at reservation creation
+- Tickets can be filtered by `?upcoming=true` (future sessions) or `?upcoming=false` (past sessions)
 
 ---
 
