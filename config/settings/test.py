@@ -15,3 +15,8 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
+
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # type: ignore[index]  # noqa: F405
+    "anon": "10000/min",
+    "user": "10000/min",
+}
