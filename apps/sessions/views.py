@@ -4,6 +4,8 @@ from django.core.cache import cache
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -34,6 +36,7 @@ class MovieSessionListView(ListAPIView):
             return [AllowAny()]
         return [IsAuthenticated(), IsAdminUser()]
 
+    @method_decorator(cache_page(60 * 2))
     def get(self, request: Request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 

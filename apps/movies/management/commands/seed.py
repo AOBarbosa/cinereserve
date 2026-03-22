@@ -152,7 +152,7 @@ class Command(BaseCommand):
                 is_confirmed=True,
             )
             self.stdout.write(
-                f"  Created confirmed ticket (past): {past_session.movie.title} @ {past_session.room} — seat {past_seat.row}{past_seat.column}"  # noqa: E501
+                f"  Created confirmed ticket (past): {past_session.movie.title} @ {past_session.room} — seat {past_seat.row}{past_seat.column}"
             )
         else:
             self.stdout.write("  Skipped past ticket (already exists)")
@@ -172,7 +172,7 @@ class Command(BaseCommand):
                 is_confirmed=True,
             )
             self.stdout.write(
-                f"  Created confirmed ticket (upcoming): {future_session_a.movie.title} @ {future_session_a.room} — seat {future_seat_a.row}{future_seat_a.column}"  # noqa: E501
+                f"  Created confirmed ticket (upcoming): {future_session_a.movie.title} @ {future_session_a.room} — seat {future_seat_a.row}{future_seat_a.column}"
             )
         else:
             self.stdout.write("  Skipped upcoming ticket (already exists)")
@@ -192,7 +192,7 @@ class Command(BaseCommand):
                 is_confirmed=False,
             )
             self.stdout.write(
-                f"  Created pending reservation: {future_session_b.movie.title} @ {future_session_b.room} — seat {future_seat_b.row}{future_seat_b.column}"  # noqa: E501
+                f"  Created pending reservation: {future_session_b.movie.title} @ {future_session_b.room} — seat {future_seat_b.row}{future_seat_b.column}"
             )
         else:
             self.stdout.write("  Skipped pending reservation (already exists)")

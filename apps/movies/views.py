@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
@@ -29,6 +31,7 @@ class MovieListView(ListCreateAPIView):
             return [IsAuthenticated(), IsAdminUser()]
         return [AllowAny()]
 
+    @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 

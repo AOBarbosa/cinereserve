@@ -1,7 +1,7 @@
 {
   "djangoFramework": true,
-  "venvPath": "/Users/andrebarbosa/Library/Caches/pypoetry/virtualenvs",
-  "venv": "cinereserve-RJYO3KcK-py3.12",
+  "venvPath": ".",
+  "venv": ".venv",
   "reportArgumentType": "none",
   "reportIncompatibleVariableOverride": "none",
   "reportAssignmentType": "none"
